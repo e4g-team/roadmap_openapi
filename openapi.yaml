@@ -1,0 +1,878 @@
+openapi: 3.1.0
+info:
+  title: E4G Roadmap API
+  description: >-
+    事業所の脱炭素目標達成に向けた施策を提案するAPIです。**注意** レスポンスサイズが大きいため、FastAPI
+    docsからのレスポンスの確認は推奨しません。POSTMAN等を利用してください。
+  version: '1.0'
+paths:
+  /v1/:
+    get:
+      summary: Get Root
+      description: |-
+        ヘルスチェック及びAPIのバージョン情報を返します
+
+        - **X-API-Version**: APIのバージョン情報
+        - **X-Response-Timestamp**: レスポンスのタイムスタンプ
+      operationId: get_root_v1__get
+      responses:
+        '200':
+          description: ヘルスチェック及びAPIのバージョン情報を返します
+          content:
+            application/json:
+              schema: {}
+        '403':
+          description: アクセス権限がない場合に返されます
+        '429':
+          description: リクエストが多すぎる場合に返されます
+        '500':
+          description: サーバーエラーが発生した場合に返されます (お問い合わせ下さい)
+  /v1/detailed/:
+    post:
+      summary: Post Detailed Analysis
+      description: |-
+        入力として受け取った企業情報に対して、脱炭素シミュレーションを行い、詳細分析した結果を返します
+
+        - **X-API-Version**: APIのバージョン情報
+        - **X-Response-Timestamp**: レスポンスのタイムスタンプ
+      operationId: post_detailed_analysis_v1_detailed__post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostDetailedAnalysisInput-Input'
+        required: true
+      responses:
+        '200':
+          description: 入力として受け取った企業情報に対して、脱炭素シミュレーションを行い、詳細分析した結果を返します
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostDetailedAnalysisOutput'
+        '403':
+          description: アクセス権限がない場合に返されます
+        '422':
+          description: 入力データの形式が不正な場合に返されます
+        '429':
+          description: リクエストが多すぎる場合に返されます
+        '500':
+          description: サーバーエラーが発生した場合に返されます (お問い合わせ下さい)
+components:
+  schemas:
+    BatterySettings:
+      properties:
+        first_amount:
+          type: number
+          minimum: 0
+          title: First Amount
+        max_amount:
+          type: number
+          minimum: 0
+          title: Max Amount
+        search_range:
+          type: number
+          minimum: 0
+          title: Search Range
+        depreciation_period:
+          type: integer
+          minimum: 0
+          title: Depreciation Period
+        charge_loss:
+          type: number
+          minimum: 0
+          title: Charge Loss
+        discharge_loss:
+          type: number
+          minimum: 0
+          title: Discharge Loss
+      type: object
+      required:
+        - first_amount
+        - max_amount
+        - search_range
+        - depreciation_period
+        - charge_loss
+        - discharge_loss
+      title: BatterySettings
+      description: |-
+        蓄電池システムの設定を表すクラス
+
+        Attributes:
+            - first_amount (float): 初期導入量 (kWh)
+
+            - max_amount (float): 最大導入量 (初期導入量に対する%)
+
+            - search_range (float): 探索範囲 (初期導入量に対する%)
+
+            - depreciation_period (int): 償却年数
+
+            - charge_loss (float): 充電時の損失率（割合）
+
+            - discharge_loss (float): 放電時の損失率（割合）
+    CostScenarioInput:
+      properties:
+        onsite_PV:
+          anyOf:
+            - additionalProperties:
+                type: number
+              type: object
+            - type: 'null'
+          title: Onsite Pv
+        offsite_PV:
+          anyOf:
+            - additionalProperties:
+                type: number
+              type: object
+            - type: 'null'
+          title: Offsite Pv
+        offsite_wind:
+          anyOf:
+            - additionalProperties:
+                type: number
+              type: object
+            - type: 'null'
+          title: Offsite Wind
+        battery:
+          anyOf:
+            - additionalProperties:
+                type: number
+              type: object
+            - type: 'null'
+          title: Battery
+        system_procurement_volume:
+          anyOf:
+            - additionalProperties:
+                type: number
+              type: object
+            - type: 'null'
+          title: System Procurement Volume
+        sell_back:
+          anyOf:
+            - additionalProperties:
+                type: number
+              type: object
+            - type: 'null'
+          title: Sell Back
+        carbon_credit_price:
+          anyOf:
+            - additionalProperties:
+                type: number
+              type: object
+            - type: 'null'
+          title: Carbon Credit Price
+      type: object
+      required:
+        - onsite_PV
+        - offsite_PV
+        - offsite_wind
+        - battery
+        - system_procurement_volume
+        - sell_back
+        - carbon_credit_price
+      title: CostScenarioInput
+      description: >-
+        コストシナリオの入力を表すクラス
+
+        各コスト辞書は、年度をキーとして、その年度のコスト（kWh/円）を値として持ちます。例えば、onsite_PVのコスト辞書は、{2023:
+        10, 2024: 9, 2025: 8} のようになります。
+
+        入力データのフェーズの年度を網羅するようなコスト辞書を与える必要があります。
+
+
+        Attributes:
+
+            onsite_PV (Optional[Dict[int, float]]): 屋内太陽光発電の年ごとのコスト辞書
+
+            offsite_PV (Optional[Dict[int, float]]): 屋外太陽光発電の年ごとのコスト辞書
+
+            offsite_wind (Optional[Dict[int, float]]): 屋外風力発電の年ごとのコスト辞書
+
+            battery (Optional[Dict[int, float]]): 蓄電池の年ごとのコスト辞書
+
+            system_procurement_volume (Optional[Dict[int, float]]): システム調達量の年ごとのコスト辞書
+
+            sell_back (Optional[Dict[int, float]]): 売電の年ごとのコスト辞書
+
+            carbon_credit_price (Optional[Dict[int, float]]): 炭素クレジット価格の年ごとのコスト辞書
+
+
+        Notes:
+            辞書が与えられなかった場合、それぞれのコスト項目にはデフォルト値が適用されます。
+    DeploymentLevel:
+      properties:
+        carbon_credit:
+          type: number
+          title: Carbon Credit
+        battery_capacity:
+          type: number
+          title: Battery Capacity
+        onsite_PV:
+          type: number
+          title: Onsite Pv
+        offsite_PV:
+          type: number
+          title: Offsite Pv
+        offsite_wind:
+          type: number
+          title: Offsite Wind
+        base_demand_size:
+          type: number
+          title: Base Demand Size
+      type: object
+      required:
+        - carbon_credit
+        - battery_capacity
+        - onsite_PV
+        - offsite_PV
+        - offsite_wind
+        - base_demand_size
+      title: DeploymentLevel
+      description: |-
+        施策導入量
+
+        Attributes:
+        - carbon_credit: float
+            カーボンクレジット (kWh/年)
+        - battery_capacity: float
+            バッテリー容量 (kWh)
+        - onsite_PV: float
+            オンサイトPV (kWh/年)
+        - offsite_PV: float
+            オフサイトPV (kWh/年)
+        - offsite_wind: float
+            オフサイト風力 (kWh/年)
+        - base_demand_size: float
+            導入比率を計算する際の基準となる、事業所の初年度の需要量 (kWh/年) - 各フェーズの施策導入割合の計算に使用
+    FacilityInput-Input:
+      properties:
+        name:
+          anyOf:
+            - type: string
+            - type: 'null'
+          title: Name
+        phase_demand_growth_ratio_list:
+          items:
+            type: number
+          type: array
+          minItems: 1
+          title: Phase Demand Growth Ratio List
+          description: 各フェーズにおける需要量の成長率のリスト（1以上）
+        pre_phase_onsite_PV_amount:
+          type: number
+          minimum: 0
+          title: Pre Phase Onsite Pv Amount
+        pre_phase_offsite_PV_amount:
+          type: number
+          minimum: 0
+          title: Pre Phase Offsite Pv Amount
+        pre_phase_offsite_wind_amount:
+          type: number
+          minimum: 0
+          title: Pre Phase Offsite Wind Amount
+        pre_phase_battery_amount:
+          type: number
+          minimum: 0
+          title: Pre Phase Battery Amount
+        settings:
+          $ref: '#/components/schemas/FacilitySettings'
+      type: object
+      required:
+        - name
+        - phase_demand_growth_ratio_list
+        - pre_phase_onsite_PV_amount
+        - pre_phase_offsite_PV_amount
+        - pre_phase_offsite_wind_amount
+        - pre_phase_battery_amount
+        - settings
+      title: FacilityInput
+      description: |-
+        事業所の入力を表すクラス
+
+        Attributes: 
+
+
+            - name (Optional[str]): 事業所の名前
+
+            - phase_demand_growth_ratio_list (List[float]): 各フェーズにおける需要量の成長率のリスト
+
+            - pre_phase_onsite_PV_amount (float): フェーズ開始時のonsite太陽光発電の導入量
+
+            - pre_phase_offsite_PV_amount (float): フェーズ開始時のoffsite太陽光発電の導入量
+
+            - pre_phase_offsite_wind_amount (float): フェーズ開始時のoffsite風力発電の導入量
+
+            - pre_phase_battery_amount (float): フェーズ開始時の蓄電池の導入量
+
+            - settings (FacilitySettings): フェーズ間で共通な事業所の設定データ
+    FacilityInput-Output:
+      properties:
+        name:
+          anyOf:
+            - type: string
+            - type: 'null'
+          title: Name
+        phase_demand_growth_ratio_list:
+          items:
+            type: number
+          type: array
+          minItems: 1
+          title: Phase Demand Growth Ratio List
+          description: 各フェーズにおける需要量の成長率のリスト（1以上）
+        pre_phase_onsite_PV_amount:
+          type: number
+          minimum: 0
+          title: Pre Phase Onsite Pv Amount
+        pre_phase_offsite_PV_amount:
+          type: number
+          minimum: 0
+          title: Pre Phase Offsite Pv Amount
+        pre_phase_offsite_wind_amount:
+          type: number
+          minimum: 0
+          title: Pre Phase Offsite Wind Amount
+        pre_phase_battery_amount:
+          type: number
+          minimum: 0
+          title: Pre Phase Battery Amount
+        settings:
+          $ref: '#/components/schemas/FacilitySettings'
+      type: object
+      required:
+        - name
+        - phase_demand_growth_ratio_list
+        - pre_phase_onsite_PV_amount
+        - pre_phase_offsite_PV_amount
+        - pre_phase_offsite_wind_amount
+        - pre_phase_battery_amount
+        - settings
+      title: FacilityInput
+      description: |-
+        事業所の入力を表すクラス
+
+        Attributes: 
+
+
+            - name (Optional[str]): 事業所の名前
+
+            - phase_demand_growth_ratio_list (List[float]): 各フェーズにおける需要量の成長率のリスト
+
+            - pre_phase_onsite_PV_amount (float): フェーズ開始時のonsite太陽光発電の導入量
+
+            - pre_phase_offsite_PV_amount (float): フェーズ開始時のoffsite太陽光発電の導入量
+
+            - pre_phase_offsite_wind_amount (float): フェーズ開始時のoffsite風力発電の導入量
+
+            - pre_phase_battery_amount (float): フェーズ開始時の蓄電池の導入量
+
+            - settings (FacilitySettings): フェーズ間で共通な事業所の設定データ
+    FacilityOutput:
+      properties:
+        facility_name:
+          type: string
+          title: Facility Name
+      type: object
+      required:
+        - facility_name
+      title: FacilityOutput
+      description: |-
+        facility_options: {
+            "facility_name": "事業所A",
+        }
+    FacilitySettings:
+      properties:
+        onsite_PV_settings:
+          $ref: '#/components/schemas/PVWindSettings'
+        offsite_PV_settings:
+          $ref: '#/components/schemas/PVWindSettings'
+        offsite_wind_settings:
+          $ref: '#/components/schemas/PVWindSettings'
+        battery_settings:
+          $ref: '#/components/schemas/BatterySettings'
+        energy_saving_rate:
+          type: number
+          maximum: 1
+          minimum: 0
+          title: Energy Saving Rate
+        growth_rate:
+          type: number
+          title: Growth Rate
+        first_year_energy_demand_list:
+          items:
+            type: number
+          type: array
+          title: First Year Energy Demand List
+        first_year_PV_supply_list:
+          items:
+            type: number
+          type: array
+          title: First Year Pv Supply List
+        first_year_wind_supply_list:
+          items:
+            type: number
+          type: array
+          title: First Year Wind Supply List
+      type: object
+      required:
+        - onsite_PV_settings
+        - offsite_PV_settings
+        - offsite_wind_settings
+        - battery_settings
+        - energy_saving_rate
+        - growth_rate
+        - first_year_energy_demand_list
+        - first_year_PV_supply_list
+        - first_year_wind_supply_list
+      title: FacilitySettings
+      description: |-
+        事業所の設定を表すクラス
+
+        Attributes:
+            - onsite_PV_settings (PVWindSettings): onsite太陽光発電の設定
+
+            - offsite_PV_settings (PVWindSettings): offsite太陽光発電の設定
+
+            - offsite_wind_settings (PVWindSettings): offsite風力発電の設定
+
+            - battery_settings (BatterySettings): 蓄電池の設定
+
+            - energy_saving_rate (float): 年度あたりの省エネ比率 (/年) 
+
+              - 例えば、0.1の場合、年度あたりの電力需要が10%削減されることを意味します。
+
+            - growth_rate (float): 需要成長率 (/年)
+
+              - 例えば、0.1の場合、年度あたりの電力需要が10%増加することを意味します。
+
+            - first_year_energy_demand_list (List[float]): 初年度の電力需要量のリスト (kWh/時) 
+
+            - first_year_PV_supply_list (List[float]): 初年度のPV供給量のリスト (kWh/時) 
+
+            - first_year_wind_supply_list (List[float]): 初年度の風力供給量のリスト (kWh/時) 
+    MeasureOutput:
+      properties:
+        phase_id:
+          type: integer
+          title: Phase Id
+        facility_id:
+          type: string
+          title: Facility Id
+        type:
+          type: string
+          enum:
+            - onsitePV
+            - offsitePV
+            - offsiteWind
+            - battery
+            - carbonCredit
+          title: Type
+        amount:
+          type: number
+          title: Amount
+        cost:
+          type: number
+          title: Cost
+        energy_saving:
+          type: number
+          title: Energy Saving
+        mac:
+          type: number
+          title: Mac
+        deployment_level:
+          additionalProperties:
+            $ref: '#/components/schemas/DeploymentLevel'
+          type: object
+          title: Deployment Level
+        deployment_level_total:
+          $ref: '#/components/schemas/DeploymentLevel'
+        supply_ratio:
+          additionalProperties:
+            $ref: '#/components/schemas/SupplyRatio'
+          type: object
+          title: Supply Ratio
+        supply_ratio_total:
+          $ref: '#/components/schemas/SupplyRatio'
+      type: object
+      required:
+        - phase_id
+        - facility_id
+        - type
+        - amount
+        - cost
+        - energy_saving
+        - mac
+        - deployment_level
+        - deployment_level_total
+        - supply_ratio
+        - supply_ratio_total
+      title: MeasureOutput
+      description: |-
+        phase: PHASE_ID
+                    facility: FACILITY_ID
+                    type: "onsitePV"
+                    amount: 0.1
+                    cost: 0.1
+                    energy_saving: 0.1
+                    mac: 0.1
+            deployment_level:
+                FACILITY_ID:
+                        carbon_credit: 0.1
+                        battery_capacity: 0.1
+                        onsite_PV: 0.1
+                        offsite_PV: 0.1
+                        offsite_wind: 0.1
+        deployment_level_total:
+            carbon_credit: 0.1
+            battery_capacity: 0.1
+            onsite_PV: 0.1
+            offsite_PV: 0.1
+            offsite_wind: 0.1
+        supply_ratio:
+                FACILITY_ID:
+                            energy_saving: 0.1
+                        grid_buy: 0.1
+                        carbon_credit: 0.1
+                        battery_capacity: 0.1
+                        onsite_PV: 0.1
+                        offsite_PV: 0.1
+                        offsite_wind: 0.1
+        supply_ratio_total:
+            energy_saving: 0.1
+            grid_buy: 0.1
+            carbon_credit: 0.1
+            battery_capacity: 0.1
+            onsite_PV: 0.1
+            offsite_PV: 0.1
+            offsite_wind: 0.1
+    PVWindSettings:
+      properties:
+        first_amount:
+          type: number
+          minimum: 0
+          title: First Amount
+        max_amount:
+          type: number
+          minimum: 0
+          title: Max Amount
+        search_range:
+          type: number
+          minimum: 0
+          title: Search Range
+      type: object
+      required:
+        - first_amount
+        - max_amount
+        - search_range
+      title: PVWindSettings
+      description: |-
+        太陽光および風力発電の設定を表すクラス
+
+        Attributes:
+            - first_amount (float): 初期導入量 (kWh)
+
+            - max_amount (float): 最大導入量 (初期導入量に対する%)
+
+            - search_range (float): 探索範囲 (初期導入量に対する%)
+    PhaseDetailOutput:
+      properties:
+        demand:
+          additionalProperties:
+            additionalProperties:
+              type: number
+            type: object
+          type: object
+          title: Demand
+        onsite_PV:
+          additionalProperties:
+            additionalProperties:
+              type: number
+            type: object
+          type: object
+          title: Onsite Pv
+        offsite_PV:
+          additionalProperties:
+            additionalProperties:
+              type: number
+            type: object
+          type: object
+          title: Offsite Pv
+        offsite_wind:
+          additionalProperties:
+            additionalProperties:
+              type: number
+            type: object
+          type: object
+          title: Offsite Wind
+        battery:
+          additionalProperties:
+            additionalProperties:
+              type: number
+            type: object
+          type: object
+          title: Battery
+        buy_electricity:
+          additionalProperties:
+            additionalProperties:
+              type: number
+            type: object
+          type: object
+          title: Buy Electricity
+        sell_electricity:
+          additionalProperties:
+            additionalProperties:
+              type: number
+            type: object
+          type: object
+          title: Sell Electricity
+      type: object
+      required:
+        - demand
+        - onsite_PV
+        - offsite_PV
+        - offsite_wind
+        - battery
+        - buy_electricity
+        - sell_electricity
+      title: PhaseDetailOutput
+    PhaseInput:
+      properties:
+        start_year:
+          type: integer
+          minimum: 2023
+          title: Start Year
+          description: 開始年は2023年以降
+        phase_length:
+          type: integer
+          minimum: 1
+          title: Phase Length
+          description: フェーズの長さは1年以上
+        phase_settings_list:
+          items:
+            $ref: '#/components/schemas/PhaseSetting'
+          type: array
+          title: Phase Settings List
+      type: object
+      required:
+        - start_year
+        - phase_length
+        - phase_settings_list
+      title: PhaseInput
+      description: |-
+        フェーズの入力を表すクラス
+
+        Attributes: 
+
+
+            - start_year (int): フェーズの開始年
+
+            - phase_length (int): フェーズの長さ
+
+            - phase_settings_list (List[PhaseSetting]): フェーズの設定のリスト
+    PhaseOutput:
+      properties:
+        start_year:
+          type: integer
+          title: Start Year
+        end_year:
+          type: integer
+          title: End Year
+        target_exclusive_RE_ratio:
+          type: number
+          title: Target Exclusive Re Ratio
+        target_RE_ratio:
+          type: number
+          title: Target Re Ratio
+        cost_merit:
+          type: string
+          enum:
+            - ROI0
+            - 累積0
+          title: Cost Merit
+      type: object
+      required:
+        - start_year
+        - end_year
+        - target_exclusive_RE_ratio
+        - target_RE_ratio
+        - cost_merit
+      title: PhaseOutput
+      description: |-
+        start_year: 2020
+        end_year: 2024
+        target_exclusive_RE_ratio: 1.0
+        target_RE_ratio: 1.0
+        cost_merit: "累積0"
+    PhaseSetting:
+      properties:
+        target_exclusive_RE_ratio:
+          type: number
+          maximum: 1
+          minimum: 0
+          title: Target Exclusive Re Ratio
+        target_RE_ratio:
+          type: number
+          maximum: 1
+          minimum: 0
+          title: Target Re Ratio
+        cost_merit:
+          type: string
+          enum:
+            - ROI0
+            - 累積0
+          title: Cost Merit
+      type: object
+      required:
+        - target_exclusive_RE_ratio
+        - target_RE_ratio
+        - cost_merit
+      title: PhaseSetting
+      description: |-
+        PhaseSettingモデルは、各フェーズの設定を表します。
+
+        Attributes:
+
+            target_exclusive_RE_ratio (float): 内部再生可能エネルギー比率目標。このフェーズ内での内部再生可能エネルギーの目標割合を示します。
+
+            target_RE_ratio (float): 再生可能エネルギー比率目標。このフェーズ内での全体の再生可能エネルギーの目標割合を示します。なので、この値は内部再生可能エネルギー比率目標よりも大きい必要があります。
+
+            cost_merit (Literal["ROI0", "累積0"]): コストメリット。このフェーズ内のコストメリットのタイプを示し、「ROI0」または「累積0」のいずれかです。
+
+                - ROI0: 投資利益率（Return on Investment, ROI）がゼロになるポイントを示します。
+
+                - 累積0: 累積コストがゼロになるポイントを示します。
+    PostDetailedAnalysisInput-Input:
+      properties:
+        facilities:
+          items:
+            $ref: '#/components/schemas/FacilityInput-Input'
+          type: array
+          title: Facilities
+        phase_input:
+          $ref: '#/components/schemas/PhaseInput'
+        cost_scenario_input:
+          $ref: '#/components/schemas/CostScenarioInput'
+        year_type:
+          type: string
+          enum:
+            - 4月始まり
+            - 1月始まり
+          title: Year Type
+      type: object
+      required:
+        - facilities
+        - phase_input
+        - cost_scenario_input
+        - year_type
+      title: PostDetailedAnalysisInput
+    PostDetailedAnalysisInput-Output:
+      properties:
+        facilities:
+          items:
+            $ref: '#/components/schemas/FacilityInput-Output'
+          type: array
+          title: Facilities
+        phase_input:
+          $ref: '#/components/schemas/PhaseInput'
+        cost_scenario_input:
+          $ref: '#/components/schemas/CostScenarioInput'
+        year_type:
+          type: string
+          enum:
+            - 4月始まり
+            - 1月始まり
+          title: Year Type
+      type: object
+      required:
+        - facilities
+        - phase_input
+        - cost_scenario_input
+        - year_type
+      title: PostDetailedAnalysisInput
+    PostDetailedAnalysisOutput:
+      properties:
+        request:
+          $ref: '#/components/schemas/PostDetailedAnalysisInput-Output'
+        facility_options:
+          additionalProperties:
+            $ref: '#/components/schemas/FacilityOutput'
+          type: object
+          title: Facility Options
+        phase_options:
+          additionalProperties:
+            $ref: '#/components/schemas/PhaseOutput'
+          type: object
+          title: Phase Options
+        measures:
+          additionalProperties:
+            $ref: '#/components/schemas/MeasureOutput'
+          type: object
+          title: Measures
+        phase_details:
+          additionalProperties:
+            $ref: '#/components/schemas/PhaseDetailOutput'
+          type: object
+          title: Phase Details
+      type: object
+      required:
+        - request
+        - facility_options
+        - phase_options
+        - measures
+        - phase_details
+      title: PostDetailedAnalysisOutput
+    SupplyRatio:
+      properties:
+        carbon_credit:
+          type: number
+          title: Carbon Credit
+        battery:
+          type: number
+          title: Battery
+        onsite_PV:
+          type: number
+          title: Onsite Pv
+        offsite_PV:
+          type: number
+          title: Offsite Pv
+        offsite_wind:
+          type: number
+          title: Offsite Wind
+        system_procurement_volume:
+          type: number
+          title: System Procurement Volume
+      type: object
+      required:
+        - carbon_credit
+        - battery
+        - onsite_PV
+        - offsite_PV
+        - offsite_wind
+        - system_procurement_volume
+      title: SupplyRatio
+      description: >-
+        対象年度の需要量に対する、各施策の割合を示す
+
+        DeploymentLevelをもとに、各施策の割合を計算する
+
+        省エネ比率に関しては、別途計算する
+
+
+        各フェーズにおいて、SupplyRatioの総和は1になる
+
+        *DashboardのSupplyRatioとは異なるので注意（DashboardにおけるSupplyRatioは、初年度の需要量を1としたフェーズごとの割合
+        = 省エネ比率および需要増加を反映している）
+
+
+        Attributes:
+
+        - carbon_credit: float
+            カーボンクレジット
+        - battery: float
+            バッテリー放電
+        - onsite_PV: float
+            オンサイトPV
+        - offsite_PV: float
+            オフサイトPV
+        - offsite_wind: float
+            オフサイト風力
+        - system_procurement_volume: float
+            系統調達

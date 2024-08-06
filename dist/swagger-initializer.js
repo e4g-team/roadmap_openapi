@@ -1,3 +1,15 @@
+const DisableTryItOutPlugin = function() {
+  return {
+    statePlugins: {
+      spec: {
+        wrapSelectors: {
+          allowTryItOutFor: () => () => false
+        }
+      }
+    }
+  }
+}
+
 window.onload = function() {
   //<editor-fold desc="Changeable Configuration Block">
 
@@ -6,14 +18,16 @@ window.onload = function() {
     url: "openapi.yaml",
     dom_id: '#swagger-ui',
     deepLinking: true,
+    layout: "BaseLayout",
+    showEntensions: true,
+    showCommonExtensions: true,
     presets: [
       SwaggerUIBundle.presets.apis,
-      SwaggerUIStandalonePreset
+      SwaggerUIBundle.SwaggerUIStandalonePreset
     ],
     plugins: [
-      SwaggerUIBundle.plugins.DownloadUrl
+      DisableTryItOutPlugin
     ],
-    layout: "StandaloneLayout"
   });
 
   //</editor-fold>

@@ -3,4 +3,4 @@
 
 Openapi.jsonが欲しいならば、自由にダウンロードしてください。
 
-テンプレートは　https://github.com/peter-evans/swagger-github-pages　からです。
+テンプレートは https://github.com/peter-evans/swagger-github-pages からです。
